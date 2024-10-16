@@ -1,0 +1,5 @@
+py-solc-x==2.0.3
+argparse==1.4.0
+# web3==7.3.1 (pos版本）
+# web3==5.8.1 (pow版本）
+web3==5.8.1

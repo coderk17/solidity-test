@@ -4,9 +4,10 @@ import os
 import argparse
 from web3 import Web3
 
-def deploy_contract(contract_name, private_key, rpc_url):
+def deploy_contract(contract_name, rpc_url, private_key):
     # 连接到以太坊网络
     w3 = Web3(Web3.HTTPProvider(rpc_url))
+    account = w3.eth.accounts[0]
     
     # 读取ABI和字节码
     base_dir = os.path.dirname(os.path.dirname(__file__))
@@ -19,20 +20,17 @@ def deploy_contract(contract_name, private_key, rpc_url):
     with open(bytecode_path, 'r') as bytecode_file:
         bytecode = bytecode_file.read()
 
-    # 创建账户对象
-    account = w3.eth.account.privateKeyToAccount(private_key)
-    
     # 创建合约对象
     Contract = w3.eth.contract(abi=abi, bytecode=bytecode)
     
     # 获取nonce
-    nonce = w3.eth.get_transaction_count(account.address)
+    nonce = w3.eth.get_transaction_count(account)
     
     # 构建交易
     transaction = Contract.constructor().build_transaction({
         "chainId": w3.eth.chain_id,
         "gasPrice": w3.eth.gas_price,
-        "from": account.address,
+        "from": account,
         "nonce": nonce,
     })
     
@@ -51,9 +49,11 @@ def deploy_contract(contract_name, private_key, rpc_url):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="部署智能合约")
     parser.add_argument("contract_name", help="要部署的合约名称")
-    parser.add_argument("--private_key", required=True, help="用于部署的私钥")
-    parser.add_argument("--rpc_url", required=True, help="以太坊节点的RPC URL")
-    
     args = parser.parse_args()
 
-    deploy_contract(args.contract_name, args.private_key, args.rpc_url)
+    rpc_url = 'http://127.0.0.1:8545'
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    private_key_file = os.path.join(os.path.dirname(base_dir), 'eth', 'data', 'accounts.json')
+    with open(private_key_file, 'r') as private_key_file:
+        private_key = json.load(private_key_file)[0]['private_key']
+    deploy_contract(args.contract_name, rpc_url, private_key)
