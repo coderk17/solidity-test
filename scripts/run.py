@@ -24,23 +24,12 @@ def execute_contract(private_key, contract_name):
     contract_address = contract_addresses[contract_name]
     
     contract = w3.eth.contract(address=contract_address, abi=abi)
-    
-    account = w3.eth.account.privateKeyToAccount(private_key)
-    
-    nonce = w3.eth.getTransactionCount(account.address)
-    store_transaction = contract.functions.setName("你好").buildTransaction({
-        "chainId": w3.eth.chain_id,
-        "gasPrice": w3.eth.gas_price,
-        "from": account.address,
-        "nonce": nonce,
-    })
-    
-    signed_store_txn = w3.eth.account.sign_transaction(store_transaction, private_key=private_key)
-    store_tx_hash = w3.eth.send_raw_transaction(signed_store_txn.rawTransaction)
-    store_receipt = w3.eth.wait_for_transaction_receipt(store_tx_hash)
-    
-    stored_value = contract.functions.getName().call()
-    print(f"Stored value: {stored_value}")
+
+    module_name = f"contracts.{contract_name}"
+    module = __import__(module_name, fromlist=['call'])
+    contract_class = getattr(module, contract_name)
+    contract_instance = contract_class(w3, private_key)
+    contract_instance.call(contract)
 
 def main():
     parser = argparse.ArgumentParser(description="Compile, deploy, and execute Solidity contract")
