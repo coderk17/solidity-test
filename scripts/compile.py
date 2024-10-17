@@ -2,11 +2,12 @@ import os
 import json
 import sys
 
+import argparse
 from solcx import compile_standard, install_solc
 
-def compile_contract(contract_path):
-    contract_path = os.path.abspath(contract_path)
-    contract_name = os.path.splitext(os.path.basename(contract_path))[0]
+def compile_contract(contract_name):
+    base_dir = os.path.dirname(os.path.dirname(__file__))
+    contract_path = os.path.join(base_dir, "contracts", f"{contract_name}.sol")
     
     print(f"合约路径: {contract_path}")
     print(f"文件是否存在: {os.path.exists(contract_path)}")
@@ -57,10 +58,8 @@ def compile_contract(contract_path):
     print(f"字节码保存至: {bytecode_file_path}")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("请提供合约文件名作为参数")
-        sys.exit(1)
-    
-    contract_path = sys.argv[1]
-    print(f"提供的合约路径: {contract_path}")
-    compile_contract(contract_path)
+    parser = argparse.ArgumentParser(description="Compile Solidity contract")
+    parser.add_argument("contract_name", help="Name of the contract to compile")
+    args = parser.parse_args()
+
+    compile_contract(args.contract_name)

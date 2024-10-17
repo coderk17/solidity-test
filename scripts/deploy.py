@@ -1,13 +1,19 @@
+import configparser
 import json
 import os
 
 import argparse
 from web3 import Web3
 
-def deploy_contract(contract_name, rpc_url, private_key):
+config = configparser.ConfigParser()
+config.read('config.ini')
+rpc_url = config['ethereum']['rpc_url']
+accounts_json_path = config['files']['accounts_json_path']
+
+def deploy_contract(contract_name, private_key):
     # 连接到以太坊网络
     w3 = Web3(Web3.HTTPProvider(rpc_url))
-    account = w3.eth.accounts[0]
+    account = w3.eth.account.privateKeyToAccount(private_key)
     
     # 读取ABI和字节码
     base_dir = os.path.dirname(os.path.dirname(__file__))
@@ -24,13 +30,13 @@ def deploy_contract(contract_name, rpc_url, private_key):
     Contract = w3.eth.contract(abi=abi, bytecode=bytecode)
     
     # 获取nonce
-    nonce = w3.eth.get_transaction_count(account)
+    nonce = w3.eth.get_transaction_count(account.address)
     
     # 构建交易
     transaction = Contract.constructor().build_transaction({
         "chainId": w3.eth.chain_id,
         "gasPrice": w3.eth.gas_price,
-        "from": account,
+        "from": account.address,
         "nonce": nonce,
     })
     
@@ -44,6 +50,22 @@ def deploy_contract(contract_name, rpc_url, private_key):
     tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
     
     print(f"合约已部署到地址: {tx_receipt.contractAddress}")
+
+    # 将部署地址保存到data/contracts/contract_addresses.json
+    os.makedirs(os.path.join(base_dir, 'data', 'contracts'), exist_ok=True)
+    contract_addresses_file = os.path.join(base_dir, 'data', 'contracts', 'contract_addresses.json')
+
+    if os.path.exists(contract_addresses_file):
+        with open(contract_addresses_file, 'r') as file:
+            contract_addresses = json.load(file)
+    else:
+        contract_addresses = {}
+    
+    contract_addresses[contract_name] = tx_receipt.contractAddress
+    
+    with open(contract_addresses_file, 'w') as file:
+        json.dump(contract_addresses, file)
+
     return tx_receipt.contractAddress
 
 if __name__ == "__main__":
@@ -51,9 +73,7 @@ if __name__ == "__main__":
     parser.add_argument("contract_name", help="要部署的合约名称")
     args = parser.parse_args()
 
-    rpc_url = 'http://127.0.0.1:8545'
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    private_key_file = os.path.join(os.path.dirname(base_dir), 'eth', 'data', 'accounts.json')
-    with open(private_key_file, 'r') as private_key_file:
-        private_key = json.load(private_key_file)[0]['private_key']
-    deploy_contract(args.contract_name, rpc_url, private_key)
+    with open(accounts_json_path, 'r') as accounts_file:
+        accounts = json.load(accounts_file)
+
+    deploy_contract(args.contract_name, accounts[0]['private_key'])
