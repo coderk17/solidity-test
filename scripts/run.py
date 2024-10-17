@@ -35,7 +35,11 @@ def main():
     parser = argparse.ArgumentParser(description="Compile, deploy, and execute Solidity contract")
     parser.add_argument("action", choices=["compile", "deploy", "execute", "all"], default="execute", help="Action to perform")
     parser.add_argument("contract", default="Demo001", help="Contract file name")
+    parser.add_argument("--constructor_args", nargs="*", default=None, help="要部署的合约构造函数参数")
+    parser.add_argument("--constructor_args_type", nargs="*", default=None, help="要部署的合约构造函数参数类型")
     args = parser.parse_args()
+    print(args)
+    import pdb; pdb.set_trace()
 
     with open(accounts_json_path, 'r') as accounts_file:
         accounts = json.load(accounts_file)
@@ -45,7 +49,7 @@ def main():
         compile_contract(args.contract)
     
     if args.action == "deploy" or args.action == "all":
-        deploy_contract(args.contract, private_key)
+        deploy_contract(args.contract, private_key, args.constructor_args, args.constructor_args_type)
     
     if args.action == "execute" or args.action == "all":
         execute_contract(private_key, args.contract)

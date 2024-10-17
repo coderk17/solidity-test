@@ -10,10 +10,14 @@ config.read('config.ini')
 rpc_url = config['ethereum']['rpc_url']
 accounts_json_path = config['files']['accounts_json_path']
 
-def deploy_contract(contract_name, private_key):
+def deploy_contract(contract_name, private_key, constructor_args=None, constructor_args_type=None):
     # 连接到以太坊网络
     w3 = Web3(Web3.HTTPProvider(rpc_url))
     account = w3.eth.account.privateKeyToAccount(private_key)
+
+    # 检查账户余额
+    balance = w3.eth.get_balance(account.address)
+    print(f"账户余额: {account.address} {w3.fromWei(balance, 'ether')} ETH")
     
     # 读取ABI和字节码
     base_dir = os.path.dirname(os.path.dirname(__file__))
@@ -33,12 +37,21 @@ def deploy_contract(contract_name, private_key):
     nonce = w3.eth.get_transaction_count(account.address)
     
     # 构建交易
-    transaction = Contract.constructor().build_transaction({
-        "chainId": w3.eth.chain_id,
-        "gasPrice": w3.eth.gas_price,
-        "from": account.address,
-        "nonce": nonce,
-    })
+    if constructor_args is None:
+        transaction = Contract.constructor().build_transaction({
+            "chainId": w3.eth.chain_id,
+            "gasPrice": w3.eth.gas_price,
+            "from": account.address,
+            "nonce": nonce,
+        })
+    else:
+        constructor_args = [__builtins__[arg_type](arg) for arg, arg_type in zip(constructor_args, constructor_args_type)]
+        transaction = Contract.constructor(*constructor_args).build_transaction({
+            "chainId": w3.eth.chain_id,
+            "gasPrice": w3.eth.gas_price,
+            "from": account.address,
+            "nonce": nonce,
+        })
     
     # 签名交易
     signed_txn = w3.eth.account.sign_transaction(transaction, private_key=private_key)
@@ -71,9 +84,11 @@ def deploy_contract(contract_name, private_key):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="部署智能合约")
     parser.add_argument("contract_name", help="要部署的合约名称")
+    parser.add_argument("--constructor_args", nargs="*", default=None, help="要部署的合约构造函数参数")
+    parser.add_argument("--constructor_args_type", nargs="*", default=None, help="要部署的合约构造函数参数类型")
     args = parser.parse_args()
 
     with open(accounts_json_path, 'r') as accounts_file:
         accounts = json.load(accounts_file)
 
-    deploy_contract(args.contract_name, accounts[0]['private_key'])
+    deploy_contract(args.contract_name, accounts[0]['private_key'], args.constructor_args, args.constructor_args_type)
