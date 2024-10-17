@@ -11,9 +11,16 @@
 使用方法：
 继承BaseContractCall类，并在子类中实现特定合约的调用逻辑。
 '''
+from abc import ABC, abstractmethod
 
 
-class BaseContractCall:
+class Call(ABC):
+    @abstractmethod
+    def call(self, contract):
+        pass
+
+
+class BaseContractCall(Call):
     def __init__(self, w3, private_key):
         self.w3 = w3
         self.private_key = private_key
