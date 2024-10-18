@@ -18,6 +18,11 @@ contract Demo001 {
     
     // internal: 只能在当前合约及其子合约中访问
     uint256 internal internalVariable = 300;
+
+    // 获取privateVariable
+    function getPrivateVariable() public view returns (uint256) {
+        return privateVariable;
+    }
     
     // external: 只能从合约外部调用，不能在合约内部使用
     function externalFunction() external pure returns (string memory) {
@@ -59,5 +64,15 @@ contract Demo001 {
     constructor(uint256 _value1, uint256 _value2) {
         IMMUTABLE_VALUE1 = _value1;
         IMMUTABLE_VALUE2 = _value2;
+    }
+}
+
+contract Child is Demo001 {
+
+    constructor(uint256 _value1, uint256 _value2) Demo001(_value1, _value2) {}
+
+    // 获取internalVariable
+    function getParentInternalVariable() public view returns (uint256) {
+        return internalVariable;
     }
 }

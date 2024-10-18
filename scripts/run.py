@@ -38,9 +38,6 @@ def main():
     parser.add_argument("--constructor_args", nargs="*", default=None, help="要部署的合约构造函数参数")
     parser.add_argument("--constructor_args_type", nargs="*", default=None, help="要部署的合约构造函数参数类型")
     args = parser.parse_args()
-    print(args)
-    import pdb; pdb.set_trace()
-
     with open(accounts_json_path, 'r') as accounts_file:
         accounts = json.load(accounts_file)
     private_key = accounts[0]['private_key']

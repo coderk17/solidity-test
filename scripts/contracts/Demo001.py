@@ -5,6 +5,18 @@ class Demo001(BaseContractCall):
         super().__init__(w3, private_key)
 
     def call(self, contract):
+        # 获取 publicVariable
+        public_var = self.function_call(contract, "publicVariable")
+        print(f"publicVariable 值: {public_var}")
+
+        # 获取 privateVariable
+        private_var = self.function_call(contract, "getPrivateVariable")
+        print(f"privateVariable 值: {private_var}")
+
+        # 获取 internalVariable
+        internal_var = self.function_call(contract, "getInternalVariable")
+        print(f"internalVariable 值: {internal_var}")
+
         # 调用 publicFunction
         public_result = self.function_call(contract, "publicFunction")
         print(f"publicFunction 结果: {public_result}")
@@ -20,10 +32,6 @@ class Demo001(BaseContractCall):
         # 调用 viewFunction
         view_result = self.function_call(contract, "viewFunction")
         print(f"viewFunction 结果: {view_result}")
-
-        # 获取 publicVariable
-        public_var = self.function_call(contract, "publicVariable")
-        print(f"publicVariable 值: {public_var}")
 
         # 获取常量 CONSTANT_VALUE
         constant_value = self.function_call(contract, "CONSTANT_VALUE")
