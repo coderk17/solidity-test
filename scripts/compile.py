@@ -16,7 +16,7 @@ def compile_contract(contract_name):
         print(f"错误：找不到文件 '{contract_path}'")
         sys.exit(1)
 
-    with open(contract_path, 'r') as file:
+    with open(contract_path, 'r', encoding='utf-8') as file:
         contract_source = file.read()
 
     install_solc("0.8.0")

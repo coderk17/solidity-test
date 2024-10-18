@@ -1,6 +1,0 @@
-.vscode/
-data/
-__pycache__/
-*.pyc
-.gitignore
-config.ini

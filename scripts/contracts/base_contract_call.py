@@ -44,5 +44,8 @@ class BaseContractCall(Call):
         if args is None:
             result = contract.functions[function_name]().call()
         else:
-            result = contract.functions[function_name](args).call()
+            if isinstance(args, list):
+                result = contract.functions[function_name](*args).call()
+            else:
+                result = contract.functions[function_name](args).call()
         return result
